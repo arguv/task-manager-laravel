@@ -46,6 +46,30 @@ php artisan serve
 
 Open http://localhost:8000.
 
+## Docker setup
+
+A ready-made environment (PHP 8.3 + Composer + Node 20, and MySQL 8) is defined in `Dockerfile` and `compose.yaml`. The only requirement on your machine is Docker with the Compose plugin.
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+docker compose exec app composer install
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate --seed
+docker compose exec app npm install
+docker compose exec app npm run build
+```
+
+Open http://localhost:8000.
+
+Notes:
+
+- Compose sets the `DB_*` variables for the `app` container itself (host `mysql`, database `app`, user `app`, password `secret`), so you do not need to edit them in `.env`.
+- The `app` container runs as UID/GID 1000 by default. If your user differs, set `DEV_UID` and `DEV_GID` (e.g. `DEV_UID=$(id -u) DEV_GID=$(id -g) docker compose up -d --build`).
+- `docker/mysql-init.sql` creates the `testing` database used by the tests on first start of the MySQL volume.
+- Run the tests with `docker compose exec app php artisan test`.
+- Stop with `docker compose down`; add `-v` to also delete the database volume.
+
 ## Running the tests
 
 The feature tests use a separate MySQL database (`testing` by default, see `phpunit.xml`). Create it and grant your DB user access, then run:
